@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import org.semanticweb.owlapi.model.AxiomType;
+import org.semanticweb.owlapi.model.EntityType;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
@@ -117,8 +118,12 @@ public class OWLImmutableOntologyImpl extends OWLAxiomIndexImpl
 
     @Override
     public OWLOntologyManager getOWLOntologyManager() {
-        return verifyNotNull(manager, () -> "Manager on ontology " + getOntologyID()
-            + " is null; the ontology is no longer associated to a manager. Ensure the ontology is not being used after being removed from its manager.");
+        OWLOntologyManager m = manager;
+        if (m == null) {
+            throw new IllegalStateException("Manager on ontology " + getOntologyID()
+                + " is null; the ontology is no longer associated to a manager. Ensure the ontology is not being used after being removed from its manager.");
+        }
+        return verifyNotNull(m, "manager cannot be null at this stage");
     }
 
     @Override
@@ -279,6 +284,11 @@ public class OWLImmutableOntologyImpl extends OWLAxiomIndexImpl
     @Override
     public boolean containsDatatypeInSignature(IRI iri, Imports imports) {
         return imports.stream(this).anyMatch(o -> o.containsDatatypeInSignature(iri));
+    }
+
+    @Override
+    public boolean containsEntitiesOfTypeInSignature(EntityType<?> type) {
+        return ints.anyEntities(type);
     }
 
     @Override
