@@ -14,40 +14,81 @@ package org.semanticweb.owlapi.io;
 
 import static org.semanticweb.owlapi.util.OWLAPIPreconditions.checkNotNull;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Map;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import javax.inject.Provider;
+import javax.annotation.Nullable;
 
+import org.semanticweb.owlapi.annotations.Renders;
+import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLObject;
-import org.semanticweb.owlapi.util.SimpleRenderer;
+import org.semanticweb.owlapi.model.OWLRuntimeException;
+import org.semanticweb.owlapi.model.PrefixManager;
+import org.semanticweb.owlapi.model.parameters.ConfigurationOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 /**
  * A utility class which can be used by implementations to provide a toString rendering of OWL API
- * objects. The idea is that this is pluggable. TODO this does not allow for independent rendering;
- * in a multithreaded situation, the rendere may change mid execution because of the static
- * singleton instance
+ * objects. The renderer can be set through the ConfigurtionOptions class, with property file or
+ * system property. No local override is possible, because ToStringRenderer has no access to
+ * ontology or ontology manager objects. Be careful of changing the value of the options in a
+ * multithreaded application, as this will cause the renderer to change behaviour.
+ *
+ * For a more precise rendering use the syntax specific methods in OWLObject, where the desired
+ * forma is specified as input.
  *
  * @author Matthew Horridge, The University Of Manchester, Bio-Health Informatics Group
  * @since 2.2.0
  */
 public final class ToStringRenderer {
+    private static Logger logger = LoggerFactory.getLogger(ToStringRenderer.class);
 
-    private static final AtomicReference<Provider<OWLObjectRenderer>> rendererProvider =
-        new AtomicReference<>(SimpleRenderer::new);
+    static <Q, T> LoadingCache<Q, T> build(CacheLoader<Q, T> c) {
+        return Caffeine.newBuilder().weakKeys().softValues().build(c);
+    }
+
+    static Supplier<OWLObjectRenderer> renderer(Class<OWLObjectRenderer> className) {
+        return () -> supply(className);
+    }
+
+    static OWLObjectRenderer supply(Class<OWLObjectRenderer> className) {
+        try {
+            return className.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new OWLRuntimeException("Custom renderer unavailable: " + className);
+        }
+    }
+
+    static Class<OWLObjectRenderer> value() {
+        String value = ConfigurationOptions.TO_STRING_RENDERER.getValue(String.class, null);
+        try {
+            return (Class<OWLObjectRenderer>) Class.forName(value);
+        } catch (ClassNotFoundException e) {
+            throw new OWLRuntimeException("Custom renderer unavailable: " + value);
+        }
+    }
+
+    private static final LoadingCache<Class<OWLObjectRenderer>, Supplier<OWLObjectRenderer>> renderers =
+        build(ToStringRenderer::renderer);
 
     /**
      * @return the singleton instance
      */
     public static OWLObjectRenderer getInstance() {
-        return rendererProvider.get().get();
+        return renderers.get(value()).get();
     }
 
-    /**
-     * @param renderer the new renderer to use
-     */
-    public static void setRenderer(Provider<OWLObjectRenderer> renderer) {
-        rendererProvider.set(checkNotNull(renderer, "renderer cannot be null"));
-    }
+    private static final Map<Class<? extends OWLDocumentFormat>, Class<? extends OWLObjectRenderer>> formatToRenderer =
+        initMap();
 
     /**
      * @param object the object to render
@@ -55,5 +96,64 @@ public final class ToStringRenderer {
      */
     public static String getRendering(OWLObject object) {
         return getInstance().render(checkNotNull(object, "object cannot be null"));
+    }
+
+    private static Map<Class<? extends OWLDocumentFormat>, Class<? extends OWLObjectRenderer>> initMap() {
+        Map<Class<? extends OWLDocumentFormat>, Class<? extends OWLObjectRenderer>> map =
+            new ConcurrentHashMap<>();
+        Consumer<OWLObjectRenderer> r = c -> {
+            Renders annotation = c.getClass().getAnnotation(Renders.class);
+            if (annotation != null) {
+                map.put(annotation.value(), c.getClass());
+            }
+        };
+        try {
+            ServiceLoader.load(OWLObjectRenderer.class).forEach(r);
+        } catch (ServiceConfigurationError e) {
+            logger.debug("ServiceLoading: ", e);
+        }
+        // in OSGi, the context class loader is likely null.
+        // This would trigger the use of the system class loader, which would
+        // not see the OWLAPI jar, nor any other jar containing implementations.
+        // In that case, use this class classloader to load, at a minimum, the
+        // services provided by the OWLAPI jar itself.
+        if (map.isEmpty()) {
+            ClassLoader classLoader = ToStringRenderer.class.getClassLoader();
+            ServiceLoader.load(OWLObjectRenderer.class, classLoader).forEach(r);
+        }
+        return map;
+    }
+
+    /**
+     * @param format format for output
+     * @param pm prefix manager
+     * @return renderer prepared for output
+     */
+    public static OWLObjectRenderer getInstance(OWLDocumentFormat format,
+        @Nullable PrefixManager pm) {
+        Class<OWLObjectRenderer> class1 =
+            (Class<OWLObjectRenderer>) formatToRenderer.get(format.getClass());
+        if (class1 == null) {
+            throw new OWLRuntimeException("Format " + format
+                + " does not have an OWLObjectRenderer implementation available.");
+        }
+        Supplier<OWLObjectRenderer> supplier = renderers.get(class1);
+        if (supplier == null) {
+            throw new OWLRuntimeException("Format " + format
+                + " does not have an OWLObjectRenderer supplier implementation available.");
+        }
+        OWLObjectRenderer r = supplier.get();
+        if (pm != null) {
+            r.setPrefixManager(pm);
+        }
+        return r;
+    }
+
+    /**
+     * @param format format for output
+     * @return renderer prepared for output
+     */
+    public static OWLObjectRenderer getInstance(OWLDocumentFormat format) {
+        return getInstance(format, null);
     }
 }

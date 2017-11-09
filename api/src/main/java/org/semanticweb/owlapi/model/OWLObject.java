@@ -23,6 +23,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
+import org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat;
+
 /**
  * @author Matthew Horridge, The University Of Manchester, Bio-Health Informatics Group
  * @since 2.0.0
@@ -169,5 +172,48 @@ public interface OWLObject
     @Override
     default int typeIndex() {
         return type().typeIndex();
+    }
+
+    /**
+     * @param format document format to use
+     * @return string serialization
+     */
+    String toSyntax(OWLDocumentFormat format);
+
+    /**
+     * @param format document format to use
+     * @param pm prefix manager
+     * @return string serialization
+     */
+    String toSyntax(OWLDocumentFormat format, PrefixManager pm);
+
+    /**
+     * @return format the object to functional syntax
+     */
+    default String toFunctionalSyntax() {
+        return toSyntax(new FunctionalSyntaxDocumentFormat());
+    }
+
+    /**
+     * @return format the object to manchester syntax
+     */
+    default String toManchesterSyntax() {
+        return toSyntax(new ManchesterSyntaxDocumentFormat());
+    }
+
+    /**
+     * @param pm prefix manager
+     * @return format the object to functional syntax
+     */
+    default String toFunctionalSyntax(PrefixManager pm) {
+        return toSyntax(new FunctionalSyntaxDocumentFormat(), pm);
+    }
+
+    /**
+     * @param pm prefix manager
+     * @return format the object to manchester syntax
+     */
+    default String toManchesterSyntax(PrefixManager pm) {
+        return toSyntax(new ManchesterSyntaxDocumentFormat(), pm);
     }
 }
