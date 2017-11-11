@@ -56,6 +56,16 @@ public class OWLDisjointUnionAxiomImpl extends OWLClassAxiomImpl implements OWLD
     }
 
     @Override
+    public Stream<OWLClassExpression> operands() {
+        return classExpressions();
+    }
+
+    @Override
+    public List<OWLClassExpression> getOperandsAsList() {
+        return classExpressions;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public OWLDisjointUnionAxiom getAxiomWithoutAnnotations() {
         return !isAnnotated() ? this
@@ -78,7 +88,7 @@ public class OWLDisjointUnionAxiomImpl extends OWLClassAxiomImpl implements OWLD
     @Override
     public OWLEquivalentClassesAxiom getOWLEquivalentClassesAxiom() {
         return new OWLEquivalentClassesAxiomImpl(sorted(OWLClassExpression.class, owlClass,
-            new OWLObjectUnionOfImpl(classExpressions.stream())), NO_ANNOTATIONS);
+            new OWLObjectUnionOfImpl(classExpressions)), NO_ANNOTATIONS);
     }
 
     @Override

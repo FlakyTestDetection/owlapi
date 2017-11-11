@@ -36,7 +36,14 @@ public interface OWLDeclarationAxiom extends OWLAxiom {
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getEntity(), annotations());
+        return Stream.of(getEntity(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getEntity().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -46,7 +53,7 @@ public interface OWLDeclarationAxiom extends OWLAxiom {
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getEntity());
+        return Stream.of(annotationsAsList(), getEntity());
     }
 
     /**

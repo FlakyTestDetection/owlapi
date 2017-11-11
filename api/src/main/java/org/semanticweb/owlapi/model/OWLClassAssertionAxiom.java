@@ -25,7 +25,15 @@ public interface OWLClassAssertionAxiom extends OWLIndividualAxiom, OWLSubClassO
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getIndividual(), getClassExpression(), annotations());
+        return Stream.of(getIndividual(), getClassExpression(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getIndividual().hashCode());
+        hash = OWLObject.hashIteration(hash, getClassExpression().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -35,7 +43,7 @@ public interface OWLClassAssertionAxiom extends OWLIndividualAxiom, OWLSubClassO
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getIndividual(), getClassExpression());
+        return Stream.of(annotationsAsList(), getIndividual(), getClassExpression());
     }
 
     @Override

@@ -45,4 +45,9 @@ public abstract class OWLNaryDataRangeImpl extends OWLObjectImpl implements OWLN
     public Stream<OWLDataRange> operands() {
         return streamFromSorted(operands);
     }
+
+    @Override
+    public List<OWLDataRange> getOperandsAsList() {
+        return operands;
+    }
 }

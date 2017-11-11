@@ -25,7 +25,14 @@ public interface SWRLBuiltInAtom extends SWRLAtom {
 
     @Override
     default Stream<?> components() {
-        return Stream.of(arguments(), getPredicate());
+        return Stream.of(getArguments(), getPredicate());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getArguments().hashCode());
+        return OWLObject.hashIteration(hash, getPredicate().hashCode());
     }
 
     @Override

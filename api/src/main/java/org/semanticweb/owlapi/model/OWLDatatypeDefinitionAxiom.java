@@ -25,7 +25,15 @@ public interface OWLDatatypeDefinitionAxiom extends OWLLogicalAxiom {
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getDatatype(), getDataRange(), annotations());
+        return Stream.of(getDatatype(), getDataRange(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getDatatype().hashCode());
+        hash = OWLObject.hashIteration(hash, getDataRange().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -35,7 +43,7 @@ public interface OWLDatatypeDefinitionAxiom extends OWLLogicalAxiom {
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getDatatype(), getDataRange());
+        return Stream.of(annotationsAsList(), getDatatype(), getDataRange());
     }
 
     @Override

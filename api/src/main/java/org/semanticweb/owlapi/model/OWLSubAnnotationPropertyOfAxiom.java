@@ -29,7 +29,15 @@ public interface OWLSubAnnotationPropertyOfAxiom extends OWLAnnotationAxiom {
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getSubProperty(), getSuperProperty(), annotations());
+        return Stream.of(getSubProperty(), getSuperProperty(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getSubProperty().hashCode());
+        hash = OWLObject.hashIteration(hash, getSuperProperty().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -39,7 +47,7 @@ public interface OWLSubAnnotationPropertyOfAxiom extends OWLAnnotationAxiom {
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getSubProperty(), getSuperProperty());
+        return Stream.of(annotationsAsList(), getSubProperty(), getSuperProperty());
     }
 
     @Override

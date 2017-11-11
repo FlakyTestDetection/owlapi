@@ -12,7 +12,6 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. */
 package org.semanticweb.owlapi.model;
 
-import static org.semanticweb.owlapi.util.OWLAPIStreamUtils.asList;
 import static org.semanticweb.owlapi.util.OWLAPIStreamUtils.asSet;
 
 import java.util.List;
@@ -28,17 +27,24 @@ public interface OWLNaryClassAxiom extends OWLClassAxiom, OWLNaryAxiom<OWLClassE
 
     @Override
     default Stream<?> components() {
-        return Stream.of(classExpressions(), annotations());
+        return Stream.of(getOperandsAsList(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getOperandsAsList().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
     default Stream<?> componentsWithoutAnnotations() {
-        return Stream.of(classExpressions());
+        return Stream.of(getOperandsAsList());
     }
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), classExpressions());
+        return Stream.of(annotationsAsList(), getOperandsAsList());
     }
 
     /**
@@ -73,7 +79,7 @@ public interface OWLNaryClassAxiom extends OWLClassAxiom, OWLNaryAxiom<OWLClassE
      */
     @Deprecated
     default List<OWLClassExpression> getClassExpressionsAsList() {
-        return asList(classExpressions());
+        return getOperandsAsList();
     }
 
     /**

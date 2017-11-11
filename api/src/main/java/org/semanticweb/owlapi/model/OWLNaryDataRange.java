@@ -25,7 +25,12 @@ public interface OWLNaryDataRange extends OWLDataRange, HasOperands<OWLDataRange
 
     @Override
     default Stream<?> components() {
-        return Stream.of(operands());
+        return Stream.of(getOperandsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        return OWLObject.hashIteration(hashIndex(), getOperandsAsList().hashCode());
     }
 
     /**

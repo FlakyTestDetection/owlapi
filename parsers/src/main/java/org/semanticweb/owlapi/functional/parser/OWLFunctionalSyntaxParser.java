@@ -221,7 +221,7 @@ addAxiom(ax);
     jj_consume_token(CLOSEPAR);
 }
 
-  final public void Prefix() throws ParseException {String prefixName;
+  final public void Prefix() throws ParseException {String prefixName="";
     IRI iri;
     jj_consume_token(PREFIX);
     jj_consume_token(OPENPAR);
@@ -1862,7 +1862,7 @@ return subj;
 return value;
 }
 
-  final public Set<OWLAnnotation> AxiomAnnotationSet() throws ParseException {Set<OWLAnnotation> annos = new HashSet<OWLAnnotation>();
+  final public Set<OWLAnnotation> AxiomAnnotationSet() throws ParseException {Set<OWLAnnotation> annos = null;
     OWLAnnotation anno;
     label_15:
     while (true) {
@@ -1876,9 +1876,10 @@ return value;
         break label_15;
       }
       anno = Annotation();
-annos.add(anno);
+if(annos == null) { annos = new HashSet<OWLAnnotation>(); }
+        annos.add(anno);
     }
-return annos;
+return annos  == null ? Collections.emptySet() : annos;
 }
 
   final public OWLImportsDeclaration ImportsDeclaration() throws ParseException {IRI iri;
@@ -2333,9 +2334,8 @@ arg = df.getSWRLLiteralArgument(literal);
 return arg;
 }
 
-  /** Generated Token Manager. */
-  public OWLFunctionalSyntaxParserTokenManager token_source;
-  SimpleCharStream jj_input_stream;
+  /** User defined Token Manager. */
+  public TokenManager token_source;
   /** Current token. */
   public Token token;
   /** Next token. */
@@ -2371,44 +2371,9 @@ return arg;
 	   jj_la1_4 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x0,0x0,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
 	}
 
-  /** Constructor. */
-  public OWLFunctionalSyntaxParser(Provider stream) {
-	 jj_input_stream = new SimpleCharStream(stream, 1, 1);
-	 token_source = new OWLFunctionalSyntaxParserTokenManager(jj_input_stream);
-	 token = new Token();
-	 jj_ntk = -1;
-	 jj_gen = 0;
-	 for (int i = 0; i < 49; i++) jj_la1[i] = -1;
-  }
 
-  /** Constructor. */
-  public OWLFunctionalSyntaxParser(String dsl) throws ParseException, TokenMgrException {
-	   this(new StringProvider(dsl));
-  }
-
-  public void ReInit(String s) {
-	  ReInit(new StringProvider(s));
-  }
-  /** Reinitialise. */
-  public void ReInit(Provider stream) {
-	if (jj_input_stream == null) {
-	   jj_input_stream = new SimpleCharStream(stream, 1, 1);
-	} else {
-	   jj_input_stream.ReInit(stream, 1, 1);
-	}
-	if (token_source == null) {
- token_source = new OWLFunctionalSyntaxParserTokenManager(jj_input_stream);
-	}
-
-	 token_source.ReInit(jj_input_stream);
-	 token = new Token();
-	 jj_ntk = -1;
-	 jj_gen = 0;
-	 for (int i = 0; i < 49; i++) jj_la1[i] = -1;
-  }
-
-  /** Constructor with generated Token Manager. */
-  public OWLFunctionalSyntaxParser(OWLFunctionalSyntaxParserTokenManager tm) {
+  /** Constructor with user supplied Token Manager. */
+  public OWLFunctionalSyntaxParser(TokenManager tm) {
 	 token_source = tm;
 	 token = new Token();
 	 jj_ntk = -1;
@@ -2417,7 +2382,7 @@ return arg;
   }
 
   /** Reinitialise. */
-  public void ReInit(OWLFunctionalSyntaxParserTokenManager tm) {
+  public void ReInit(TokenManager tm) {
 	 token_source = tm;
 	 token = new Token();
 	 jj_ntk = -1;
@@ -2510,7 +2475,7 @@ return arg;
 	 for (int i = 0; i < jj_expentries.size(); i++) {
 	   exptokseq[i] = jj_expentries.get(i);
 	 }
-	 return new ParseException(token, exptokseq, tokenImage, token_source == null ? null : OWLFunctionalSyntaxParserTokenManager.lexStateNames[token_source.curLexState]);
+	 return new ParseException(token, exptokseq, tokenImage);
   }
 
   private int trace_indent = 0;

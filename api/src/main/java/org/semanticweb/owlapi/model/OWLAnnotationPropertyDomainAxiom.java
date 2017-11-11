@@ -35,12 +35,20 @@ public interface OWLAnnotationPropertyDomainAxiom
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getProperty(), getDomain(), annotations());
+        return Stream.of(getProperty(), getDomain(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getProperty().hashCode());
+        hash = OWLObject.hashIteration(hash, getDomain().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getProperty(), getDomain());
+        return Stream.of(annotationsAsList(), getProperty(), getDomain());
     }
 
     @Override

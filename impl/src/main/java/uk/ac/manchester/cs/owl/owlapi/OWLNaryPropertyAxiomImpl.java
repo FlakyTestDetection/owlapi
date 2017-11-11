@@ -42,7 +42,9 @@ public abstract class OWLNaryPropertyAxiomImpl<P extends OWLPropertyExpression>
      */
     public OWLNaryPropertyAxiomImpl(Collection<? extends P> properties,
         Collection<OWLAnnotation> annotations) {
-        this(checkNotNull(properties, "properties cannot be null").stream(), annotations);
+        super(annotations);
+        checkNotNull(properties, "properties cannot be null");
+        this.properties = (List<P>) sorted(OWLPropertyExpression.class, properties);
     }
 
     /**
@@ -65,6 +67,11 @@ public abstract class OWLNaryPropertyAxiomImpl<P extends OWLPropertyExpression>
     @Override
     public Stream<P> properties() {
         return streamFromSorted(properties);
+    }
+
+    @Override
+    public List<P> getOperandsAsList() {
+        return properties;
     }
 
     @Override

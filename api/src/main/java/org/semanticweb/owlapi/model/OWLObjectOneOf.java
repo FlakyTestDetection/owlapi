@@ -28,7 +28,12 @@ public interface OWLObjectOneOf extends OWLAnonymousClassExpression, HasOperands
 
     @Override
     default Stream<?> components() {
-        return Stream.of(individuals());
+        return Stream.of(getOperandsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        return OWLObject.hashIteration(hashIndex(), getOperandsAsList().hashCode());
     }
 
     @Override

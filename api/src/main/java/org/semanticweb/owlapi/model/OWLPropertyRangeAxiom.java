@@ -28,7 +28,15 @@ public interface OWLPropertyRangeAxiom<P extends OWLPropertyExpression, R extend
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getProperty(), getRange(), annotations());
+        return Stream.of(getProperty(), getRange(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getProperty().hashCode());
+        hash = OWLObject.hashIteration(hash, getRange().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -38,6 +46,6 @@ public interface OWLPropertyRangeAxiom<P extends OWLPropertyExpression, R extend
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getProperty(), getRange());
+        return Stream.of(annotationsAsList(), getProperty(), getRange());
     }
 }

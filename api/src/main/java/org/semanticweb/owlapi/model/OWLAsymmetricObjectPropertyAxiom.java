@@ -25,7 +25,14 @@ public interface OWLAsymmetricObjectPropertyAxiom extends OWLObjectPropertyChara
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getProperty(), annotations());
+        return Stream.of(getProperty(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getProperty().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -35,7 +42,7 @@ public interface OWLAsymmetricObjectPropertyAxiom extends OWLObjectPropertyChara
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getProperty());
+        return Stream.of(annotationsAsList(), getProperty());
     }
 
     @Override

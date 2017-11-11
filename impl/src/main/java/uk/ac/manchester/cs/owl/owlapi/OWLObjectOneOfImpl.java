@@ -59,6 +59,11 @@ public class OWLObjectOneOfImpl extends OWLAnonymousClassExpressionImpl implemen
     }
 
     @Override
+    public List<OWLIndividual> getOperandsAsList() {
+        return values;
+    }
+
+    @Override
     public OWLClassExpression asObjectUnionOf() {
         if (values.size() == 1) {
             return this;

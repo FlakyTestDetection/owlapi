@@ -34,7 +34,15 @@ public interface OWLSubClassOfAxiom extends OWLClassAxiom {
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getSubClass(), getSuperClass(), annotations());
+        return Stream.of(getSubClass(), getSuperClass(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getSubClass().hashCode());
+        hash = OWLObject.hashIteration(hash, getSuperClass().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -44,7 +52,7 @@ public interface OWLSubClassOfAxiom extends OWLClassAxiom {
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getSubClass(), getSuperClass());
+        return Stream.of(annotationsAsList(), getSubClass(), getSuperClass());
     }
 
     /**

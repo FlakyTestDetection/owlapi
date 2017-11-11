@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  * @author Matthew Horridge, The University Of Manchester, Bio-Health Informatics Group
  * @since 2.0.0
  */
-public interface OWLDisjointUnionAxiom extends OWLClassAxiom {
+public interface OWLDisjointUnionAxiom extends OWLClassAxiom, HasOperands<OWLClassExpression> {
 
     @Override
     @SuppressWarnings("unchecked")
@@ -32,17 +32,25 @@ public interface OWLDisjointUnionAxiom extends OWLClassAxiom {
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getOWLClass(), classExpressions(), annotations());
+        return Stream.of(getOWLClass(), getOperandsAsList(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getOWLClass().hashCode());
+        hash = OWLObject.hashIteration(hash, getOperandsAsList().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
     default Stream<?> componentsWithoutAnnotations() {
-        return Stream.of(getOWLClass(), classExpressions());
+        return Stream.of(getOWLClass(), getOperandsAsList());
     }
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getOWLClass(), classExpressions());
+        return Stream.of(annotationsAsList(), getOWLClass(), getOperandsAsList());
     }
 
     @Override

@@ -51,6 +51,11 @@ public abstract class OWLNaryClassAxiomImpl extends OWLClassAxiomImpl implements
     }
 
     @Override
+    public List<OWLClassExpression> getOperandsAsList() {
+        return classExpressions;
+    }
+
+    @Override
     public boolean contains(OWLClassExpression ce) {
         return classExpressions.contains(ce);
     }

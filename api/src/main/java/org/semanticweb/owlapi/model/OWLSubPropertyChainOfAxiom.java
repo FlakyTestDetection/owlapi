@@ -37,7 +37,15 @@ public interface OWLSubPropertyChainOfAxiom extends OWLObjectPropertyAxiom {
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getPropertyChain(), getSuperProperty(), annotations());
+        return Stream.of(getPropertyChain(), getSuperProperty(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getPropertyChain().hashCode());
+        hash = OWLObject.hashIteration(hash, getSuperProperty().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
@@ -47,7 +55,7 @@ public interface OWLSubPropertyChainOfAxiom extends OWLObjectPropertyAxiom {
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getPropertyChain(), getSuperProperty());
+        return Stream.of(annotationsAsList(), getPropertyChain(), getSuperProperty());
     }
 
     /**

@@ -34,12 +34,20 @@ public interface OWLAnnotation
 
     @Override
     default Stream<?> components() {
-        return Stream.of(getProperty(), getValue(), annotations());
+        return Stream.of(getProperty(), getValue(), annotationsAsList());
+    }
+
+    @Override
+    default int initHashCode() {
+        int hash = hashIndex();
+        hash = OWLObject.hashIteration(hash, getProperty().hashCode());
+        hash = OWLObject.hashIteration(hash, getValue().hashCode());
+        return OWLObject.hashIteration(hash, annotationsAsList().hashCode());
     }
 
     @Override
     default Stream<?> componentsAnnotationsFirst() {
-        return Stream.of(annotations(), getProperty(), getValue());
+        return Stream.of(annotationsAsList(), getProperty(), getValue());
     }
 
     @Override
