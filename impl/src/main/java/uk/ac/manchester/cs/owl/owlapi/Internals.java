@@ -47,8 +47,6 @@ import static org.semanticweb.owlapi.model.AxiomType.SYMMETRIC_OBJECT_PROPERTY;
 import static org.semanticweb.owlapi.model.AxiomType.TRANSITIVE_OBJECT_PROPERTY;
 import static org.semanticweb.owlapi.util.CollectionFactory.createSyncSet;
 import static org.semanticweb.owlapi.util.OWLAPIPreconditions.checkNotNull;
-import static org.semanticweb.owlapi.util.OWLAPIPreconditions.emptyOptional;
-import static org.semanticweb.owlapi.util.OWLAPIPreconditions.optional;
 import static org.semanticweb.owlapi.util.OWLAPIStreamUtils.asList;
 import static uk.ac.manchester.cs.owl.owlapi.InitVisitorFactory.ANNOTSUPERNAMED;
 import static uk.ac.manchester.cs.owl.owlapi.InitVisitorFactory.CLASSCOLLECTIONS;
@@ -70,6 +68,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -149,7 +148,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Internals implements Serializable {
 
-    protected static Logger LOGGER = LoggerFactory.getLogger(Internals.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(Internals.class);
     //@formatter:off
 protected transient MapPointer<OWLClassExpression, OWLClassAssertionAxiom>                          classAssertionAxiomsByClass                         = buildLazy(CLASS_ASSERTION, CLASSEXPRESSIONS);
 protected transient MapPointer<OWLAnnotationSubject, OWLAnnotationAssertionAxiom>                   annotationAssertionAxiomsBySubject                  = buildLazy(ANNOTATION_ASSERTION, ANNOTSUPERNAMED);
@@ -208,6 +207,7 @@ protected transient MapPointer<OWLAnonymousIndividual, OWLAxiom>    owlAnonymous
 protected transient MapPointer<OWLDatatype, OWLAxiom>               owlDatatypeReferences               = build();
 protected transient MapPointer<OWLAnnotationProperty, OWLAxiom>     owlAnnotationPropertyReferences     = build();
 protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarationsByEntity                = build();
+protected transient EnumMap<InternalsPointers, MapPointer<?, ? extends OWLAxiom>> pointers              = map();
 //@formatter:on
 
     @Nullable
@@ -342,6 +342,12 @@ protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarations
         sameIndividualsAxiomsByIndividual = buildLazy(SAME_INDIVIDUAL, ICOLLECTIONS);
         axiomsForSerialization.forEach(this::addAxiom);
         axiomsForSerialization = null;
+        pointers = map();
+    }
+
+    protected Stream<OWLAnnotationProperty> annotationProperties() {
+        return Stream.concat(owlAnnotationPropertyReferences.keySet().stream(),
+            ontologyAnnotations.stream().map(OWLAnnotation::getProperty));
     }
 
     /**
@@ -370,57 +376,91 @@ protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarations
         return false;
     }
 
+    private EnumMap<InternalsPointers, MapPointer<?, ? extends OWLAxiom>> map() {
+        EnumMap<InternalsPointers, MapPointer<?, ? extends OWLAxiom>> m =
+            new EnumMap<>(InternalsPointers.class);
+        m.put(InternalsPointers.axiomsByType, axiomsByType);
+        m.put(InternalsPointers.owlClassReferences, owlClassReferences);
+        m.put(InternalsPointers.owlObjectPropertyReferences, owlObjectPropertyReferences);
+        m.put(InternalsPointers.owlDataPropertyReferences, owlDataPropertyReferences);
+        m.put(InternalsPointers.owlIndividualReferences, owlIndividualReferences);
+        m.put(InternalsPointers.owlAnonymousIndividualReferences, owlAnonymousIndividualReferences);
+        m.put(InternalsPointers.owlDatatypeReferences, owlDatatypeReferences);
+        m.put(InternalsPointers.owlAnnotationPropertyReferences, owlAnnotationPropertyReferences);
+        m.put(InternalsPointers.declarationsByEntity, declarationsByEntity);
+        m.put(InternalsPointers.classAssertionAxiomsByClass, classAssertionAxiomsByClass);
+        m.put(InternalsPointers.annotationAssertionAxiomsBySubject,
+            annotationAssertionAxiomsBySubject);
+        m.put(InternalsPointers.subClassAxiomsBySubPosition, subClassAxiomsBySubPosition);
+        m.put(InternalsPointers.subClassAxiomsBySuperPosition, subClassAxiomsBySuperPosition);
+        m.put(InternalsPointers.objectSubPropertyAxiomsBySubPosition,
+            objectSubPropertyAxiomsBySubPosition);
+        m.put(InternalsPointers.objectSubPropertyAxiomsBySuperPosition,
+            objectSubPropertyAxiomsBySuperPosition);
+        m.put(InternalsPointers.dataSubPropertyAxiomsBySubPosition,
+            dataSubPropertyAxiomsBySubPosition);
+        m.put(InternalsPointers.dataSubPropertyAxiomsBySuperPosition,
+            dataSubPropertyAxiomsBySuperPosition);
+        m.put(InternalsPointers.classAxiomsByClass, classAxiomsByClass);
+        m.put(InternalsPointers.equivalentClassesAxiomsByClass, equivalentClassesAxiomsByClass);
+        m.put(InternalsPointers.disjointClassesAxiomsByClass, disjointClassesAxiomsByClass);
+        m.put(InternalsPointers.disjointUnionAxiomsByClass, disjointUnionAxiomsByClass);
+        m.put(InternalsPointers.hasKeyAxiomsByClass, hasKeyAxiomsByClass);
+        m.put(InternalsPointers.equivalentObjectPropertyAxiomsByProperty,
+            equivalentObjectPropertyAxiomsByProperty);
+        m.put(InternalsPointers.disjointObjectPropertyAxiomsByProperty,
+            disjointObjectPropertyAxiomsByProperty);
+        m.put(InternalsPointers.objectPropertyDomainAxiomsByProperty,
+            objectPropertyDomainAxiomsByProperty);
+        m.put(InternalsPointers.objectPropertyRangeAxiomsByProperty,
+            objectPropertyRangeAxiomsByProperty);
+        m.put(InternalsPointers.functionalObjectPropertyAxiomsByProperty,
+            functionalObjectPropertyAxiomsByProperty);
+        m.put(InternalsPointers.inverseFunctionalPropertyAxiomsByProperty,
+            inverseFunctionalPropertyAxiomsByProperty);
+        m.put(InternalsPointers.symmetricPropertyAxiomsByProperty,
+            symmetricPropertyAxiomsByProperty);
+        m.put(InternalsPointers.asymmetricPropertyAxiomsByProperty,
+            asymmetricPropertyAxiomsByProperty);
+        m.put(InternalsPointers.reflexivePropertyAxiomsByProperty,
+            reflexivePropertyAxiomsByProperty);
+        m.put(InternalsPointers.irreflexivePropertyAxiomsByProperty,
+            irreflexivePropertyAxiomsByProperty);
+        m.put(InternalsPointers.transitivePropertyAxiomsByProperty,
+            transitivePropertyAxiomsByProperty);
+        m.put(InternalsPointers.inversePropertyAxiomsByProperty, inversePropertyAxiomsByProperty);
+        m.put(InternalsPointers.equivalentDataPropertyAxiomsByProperty,
+            equivalentDataPropertyAxiomsByProperty);
+        m.put(InternalsPointers.disjointDataPropertyAxiomsByProperty,
+            disjointDataPropertyAxiomsByProperty);
+        m.put(InternalsPointers.dataPropertyDomainAxiomsByProperty,
+            dataPropertyDomainAxiomsByProperty);
+        m.put(InternalsPointers.dataPropertyRangeAxiomsByProperty,
+            dataPropertyRangeAxiomsByProperty);
+        m.put(InternalsPointers.functionalDataPropertyAxiomsByProperty,
+            functionalDataPropertyAxiomsByProperty);
+        m.put(InternalsPointers.classAssertionAxiomsByIndividual, classAssertionAxiomsByIndividual);
+        m.put(InternalsPointers.objectPropertyAssertionsByIndividual,
+            objectPropertyAssertionsByIndividual);
+        m.put(InternalsPointers.dataPropertyAssertionsByIndividual,
+            dataPropertyAssertionsByIndividual);
+        m.put(InternalsPointers.negativeObjectPropertyAssertionAxiomsByIndividual,
+            negativeObjectPropertyAssertionAxiomsByIndividual);
+        m.put(InternalsPointers.negativeDataPropertyAssertionAxiomsByIndividual,
+            negativeDataPropertyAssertionAxiomsByIndividual);
+        m.put(InternalsPointers.differentIndividualsAxiomsByIndividual,
+            differentIndividualsAxiomsByIndividual);
+        m.put(InternalsPointers.sameIndividualsAxiomsByIndividual,
+            sameIndividualsAxiomsByIndividual);
+        return m;
+    }
+
     /**
      * Trims the capacity of the axiom indexes . An application can use this operation to minimize
      * the storage of the internals instance.
      */
     public void trimToSize() {
-        axiomsByType.trimToSize();
-        owlClassReferences.trimToSize();
-        owlObjectPropertyReferences.trimToSize();
-        owlDataPropertyReferences.trimToSize();
-        owlIndividualReferences.trimToSize();
-        owlAnonymousIndividualReferences.trimToSize();
-        owlDatatypeReferences.trimToSize();
-        owlAnnotationPropertyReferences.trimToSize();
-        declarationsByEntity.trimToSize();
-        classAssertionAxiomsByClass.trimToSize();
-        annotationAssertionAxiomsBySubject.trimToSize();
-        subClassAxiomsBySubPosition.trimToSize();
-        subClassAxiomsBySuperPosition.trimToSize();
-        objectSubPropertyAxiomsBySubPosition.trimToSize();
-        objectSubPropertyAxiomsBySuperPosition.trimToSize();
-        dataSubPropertyAxiomsBySubPosition.trimToSize();
-        dataSubPropertyAxiomsBySuperPosition.trimToSize();
-        classAxiomsByClass.trimToSize();
-        equivalentClassesAxiomsByClass.trimToSize();
-        disjointClassesAxiomsByClass.trimToSize();
-        disjointUnionAxiomsByClass.trimToSize();
-        hasKeyAxiomsByClass.trimToSize();
-        equivalentObjectPropertyAxiomsByProperty.trimToSize();
-        disjointObjectPropertyAxiomsByProperty.trimToSize();
-        objectPropertyDomainAxiomsByProperty.trimToSize();
-        objectPropertyRangeAxiomsByProperty.trimToSize();
-        functionalObjectPropertyAxiomsByProperty.trimToSize();
-        inverseFunctionalPropertyAxiomsByProperty.trimToSize();
-        symmetricPropertyAxiomsByProperty.trimToSize();
-        asymmetricPropertyAxiomsByProperty.trimToSize();
-        reflexivePropertyAxiomsByProperty.trimToSize();
-        irreflexivePropertyAxiomsByProperty.trimToSize();
-        transitivePropertyAxiomsByProperty.trimToSize();
-        inversePropertyAxiomsByProperty.trimToSize();
-        equivalentDataPropertyAxiomsByProperty.trimToSize();
-        disjointDataPropertyAxiomsByProperty.trimToSize();
-        dataPropertyDomainAxiomsByProperty.trimToSize();
-        dataPropertyRangeAxiomsByProperty.trimToSize();
-        functionalDataPropertyAxiomsByProperty.trimToSize();
-        classAssertionAxiomsByIndividual.trimToSize();
-        objectPropertyAssertionsByIndividual.trimToSize();
-        dataPropertyAssertionsByIndividual.trimToSize();
-        negativeObjectPropertyAssertionAxiomsByIndividual.trimToSize();
-        negativeDataPropertyAssertionAxiomsByIndividual.trimToSize();
-        differentIndividualsAxiomsByIndividual.trimToSize();
-        sameIndividualsAxiomsByIndividual.trimToSize();
+        pointers.values().forEach(MapPointer::trimToSize);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
@@ -527,19 +567,6 @@ protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarations
     /**
      * @param type type of map key
      * @param axiom class of axiom indexed
-     * @param <T> key type
-     * @param <A> value type
-     * @return map pointer matching the search, or null if there is not one
-     */
-    // not always not null, but supposed to
-    <T extends OWLObject, A extends OWLAxiom> Optional<MapPointer<T, A>> get(Class<T> type,
-        Class<A> axiom) {
-        return get(type, axiom, Navigation.IN_SUB_POSITION);
-    }
-
-    /**
-     * @param type type of map key
-     * @param axiom class of axiom indexed
      * @param position for axioms with a left/right distinction, IN_SUPER_POSITION means right index
      * @param <T> key type
      * @param <A> value type
@@ -550,153 +577,165 @@ protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarations
     <T extends OWLObject, A extends OWLAxiom> Optional<MapPointer<T, A>> get(Class<T> type,
         Class<A> axiom, Navigation position) {
         if (OWLEntity.class.isAssignableFrom(type) && axiom.equals(OWLDeclarationAxiom.class)) {
-            return optional((MapPointer<T, A>) declarationsByEntity);
+            return Optional.ofNullable((MapPointer<T, A>) declarationsByEntity);
         }
         if (type.equals(OWLClass.class) && axiom.equals(OWLAxiom.class)) {
-            return optional((MapPointer<T, A>) owlClassReferences);
+            return Optional.ofNullable((MapPointer<T, A>) owlClassReferences);
         }
         if (type.equals(OWLObjectProperty.class) && axiom.equals(OWLAxiom.class)) {
-            return optional((MapPointer<T, A>) owlObjectPropertyReferences);
+            return Optional.ofNullable((MapPointer<T, A>) owlObjectPropertyReferences);
         }
         if (type.equals(OWLDataProperty.class) && axiom.equals(OWLAxiom.class)) {
-            return optional((MapPointer<T, A>) owlDataPropertyReferences);
+            return Optional.ofNullable((MapPointer<T, A>) owlDataPropertyReferences);
         }
         if (type.equals(OWLNamedIndividual.class) && axiom.equals(OWLAxiom.class)) {
-            return optional((MapPointer<T, A>) owlIndividualReferences);
+            return Optional.ofNullable((MapPointer<T, A>) owlIndividualReferences);
         }
         if (type.equals(OWLAnonymousIndividual.class) && axiom.equals(OWLAxiom.class)) {
-            return optional((MapPointer<T, A>) owlAnonymousIndividualReferences);
+            return Optional.ofNullable((MapPointer<T, A>) owlAnonymousIndividualReferences);
         }
         if (type.equals(OWLDatatype.class) && axiom.equals(OWLAxiom.class)) {
-            return optional((MapPointer<T, A>) owlDatatypeReferences);
+            return Optional.ofNullable((MapPointer<T, A>) owlDatatypeReferences);
         }
         if (type.equals(OWLAnnotationProperty.class) && axiom.equals(OWLAxiom.class)) {
-            return optional((MapPointer<T, A>) owlAnnotationPropertyReferences);
+            return Optional.ofNullable((MapPointer<T, A>) owlAnnotationPropertyReferences);
         }
         if (type.equals(OWLClassExpression.class)) {
-            return optional((MapPointer<T, A>) classAssertionAxiomsByClass);
+            return Optional.ofNullable((MapPointer<T, A>) classAssertionAxiomsByClass);
         }
         if (type.equals(OWLObjectPropertyExpression.class)) {
             if (axiom.equals(OWLSubObjectPropertyOfAxiom.class)) {
                 if (position == Navigation.IN_SUPER_POSITION) {
-                    return optional((MapPointer<T, A>) objectSubPropertyAxiomsBySuperPosition);
+                    return Optional
+                        .ofNullable((MapPointer<T, A>) objectSubPropertyAxiomsBySuperPosition);
                 } else {
-                    return optional((MapPointer<T, A>) objectSubPropertyAxiomsBySubPosition);
+                    return Optional
+                        .ofNullable((MapPointer<T, A>) objectSubPropertyAxiomsBySubPosition);
                 }
             }
             if (axiom.equals(OWLEquivalentObjectPropertiesAxiom.class)) {
-                return optional((MapPointer<T, A>) equivalentObjectPropertyAxiomsByProperty);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) equivalentObjectPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLDisjointObjectPropertiesAxiom.class)) {
-                return optional((MapPointer<T, A>) disjointObjectPropertyAxiomsByProperty);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) disjointObjectPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLObjectPropertyDomainAxiom.class)) {
-                return optional((MapPointer<T, A>) objectPropertyDomainAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) objectPropertyDomainAxiomsByProperty);
             }
             if (axiom.equals(OWLObjectPropertyRangeAxiom.class)) {
-                return optional((MapPointer<T, A>) objectPropertyRangeAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) objectPropertyRangeAxiomsByProperty);
             }
             if (axiom.equals(OWLFunctionalObjectPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) functionalObjectPropertyAxiomsByProperty);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) functionalObjectPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLInverseFunctionalObjectPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) inverseFunctionalPropertyAxiomsByProperty);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) inverseFunctionalPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLSymmetricObjectPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) symmetricPropertyAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) symmetricPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLAsymmetricObjectPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) asymmetricPropertyAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) asymmetricPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLReflexiveObjectPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) reflexivePropertyAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) reflexivePropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLIrreflexiveObjectPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) irreflexivePropertyAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) irreflexivePropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLTransitiveObjectPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) transitivePropertyAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) transitivePropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLInverseObjectPropertiesAxiom.class)) {
-                return optional((MapPointer<T, A>) inversePropertyAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) inversePropertyAxiomsByProperty);
             }
         }
         if (type.equals(OWLDataPropertyExpression.class)) {
             if (axiom.equals(OWLSubDataPropertyOfAxiom.class)) {
                 if (position == Navigation.IN_SUPER_POSITION) {
-                    return optional((MapPointer<T, A>) dataSubPropertyAxiomsBySuperPosition);
+                    return Optional
+                        .ofNullable((MapPointer<T, A>) dataSubPropertyAxiomsBySuperPosition);
                 } else {
-                    return optional((MapPointer<T, A>) dataSubPropertyAxiomsBySubPosition);
+                    return Optional
+                        .ofNullable((MapPointer<T, A>) dataSubPropertyAxiomsBySubPosition);
                 }
             }
             if (axiom.equals(OWLEquivalentDataPropertiesAxiom.class)) {
-                return optional((MapPointer<T, A>) equivalentDataPropertyAxiomsByProperty);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) equivalentDataPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLDisjointDataPropertiesAxiom.class)) {
-                return optional((MapPointer<T, A>) disjointDataPropertyAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) disjointDataPropertyAxiomsByProperty);
             }
             if (axiom.equals(OWLDataPropertyDomainAxiom.class)) {
-                return optional((MapPointer<T, A>) dataPropertyDomainAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) dataPropertyDomainAxiomsByProperty);
             }
             if (axiom.equals(OWLDataPropertyRangeAxiom.class)) {
-                return optional((MapPointer<T, A>) dataPropertyRangeAxiomsByProperty);
+                return Optional.ofNullable((MapPointer<T, A>) dataPropertyRangeAxiomsByProperty);
             }
             if (axiom.equals(OWLFunctionalDataPropertyAxiom.class)) {
-                return optional((MapPointer<T, A>) functionalDataPropertyAxiomsByProperty);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) functionalDataPropertyAxiomsByProperty);
             }
         }
         if (type.equals(OWLAnnotationSubject.class) || type.equals(IRI.class)) {
-            return optional((MapPointer<T, A>) annotationAssertionAxiomsBySubject);
+            return Optional.ofNullable((MapPointer<T, A>) annotationAssertionAxiomsBySubject);
         }
         if (type.equals(OWLIndividual.class)) {
             if (axiom.equals(OWLClassAssertionAxiom.class)) {
-                return optional((MapPointer<T, A>) classAssertionAxiomsByIndividual);
+                return Optional.ofNullable((MapPointer<T, A>) classAssertionAxiomsByIndividual);
             }
             if (axiom.equals(OWLObjectPropertyAssertionAxiom.class)) {
-                return optional((MapPointer<T, A>) objectPropertyAssertionsByIndividual);
+                return Optional.ofNullable((MapPointer<T, A>) objectPropertyAssertionsByIndividual);
             }
             if (axiom.equals(OWLDataPropertyAssertionAxiom.class)) {
-                return optional((MapPointer<T, A>) dataPropertyAssertionsByIndividual);
+                return Optional.ofNullable((MapPointer<T, A>) dataPropertyAssertionsByIndividual);
             }
             if (axiom.equals(OWLNegativeObjectPropertyAssertionAxiom.class)) {
-                return optional(
+                return Optional.ofNullable(
                     (MapPointer<T, A>) negativeObjectPropertyAssertionAxiomsByIndividual);
             }
             if (axiom.equals(OWLNegativeDataPropertyAssertionAxiom.class)) {
-                return optional((MapPointer<T, A>) negativeDataPropertyAssertionAxiomsByIndividual);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) negativeDataPropertyAssertionAxiomsByIndividual);
             }
             if (axiom.equals(OWLDifferentIndividualsAxiom.class)) {
-                return optional((MapPointer<T, A>) differentIndividualsAxiomsByIndividual);
+                return Optional
+                    .ofNullable((MapPointer<T, A>) differentIndividualsAxiomsByIndividual);
             }
             if (axiom.equals(OWLSameIndividualAxiom.class)) {
-                return optional((MapPointer<T, A>) sameIndividualsAxiomsByIndividual);
+                return Optional.ofNullable((MapPointer<T, A>) sameIndividualsAxiomsByIndividual);
             }
         }
         if (type.equals(OWLClass.class)) {
             if (axiom.equals(OWLSubClassOfAxiom.class)) {
                 if (position == Navigation.IN_SUPER_POSITION) {
-                    return optional((MapPointer<T, A>) subClassAxiomsBySuperPosition);
+                    return Optional.ofNullable((MapPointer<T, A>) subClassAxiomsBySuperPosition);
                 } else {
-                    return optional((MapPointer<T, A>) subClassAxiomsBySubPosition);
+                    return Optional.ofNullable((MapPointer<T, A>) subClassAxiomsBySubPosition);
                 }
             }
             if (axiom.equals(OWLClassAxiom.class)) {
-                return optional((MapPointer<T, A>) classAxiomsByClass);
+                return Optional.ofNullable((MapPointer<T, A>) classAxiomsByClass);
             }
             if (axiom.equals(OWLEquivalentClassesAxiom.class)) {
-                return optional((MapPointer<T, A>) equivalentClassesAxiomsByClass);
+                return Optional.ofNullable((MapPointer<T, A>) equivalentClassesAxiomsByClass);
             }
             if (axiom.equals(OWLDisjointClassesAxiom.class)) {
-                return optional((MapPointer<T, A>) disjointClassesAxiomsByClass);
+                return Optional.ofNullable((MapPointer<T, A>) disjointClassesAxiomsByClass);
             }
             if (axiom.equals(OWLDisjointUnionAxiom.class)) {
-                return optional((MapPointer<T, A>) disjointUnionAxiomsByClass);
+                return Optional.ofNullable((MapPointer<T, A>) disjointUnionAxiomsByClass);
             }
             if (axiom.equals(OWLHasKeyAxiom.class)) {
-                return optional((MapPointer<T, A>) hasKeyAxiomsByClass);
+                return Optional.ofNullable((MapPointer<T, A>) hasKeyAxiomsByClass);
             }
         }
-        return emptyOptional();
+        return Optional.empty();
     }
 
     protected <K, V extends OWLAxiom> MapPointer<K, V> build() {
@@ -842,11 +881,8 @@ protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarations
      */
     public <K> Collection<? extends OWLAxiom> filterAxioms(OWLAxiomSearchFilter filter, K key) {
         if (filter == Filters.annotations) {
-            Optional<MapPointer<OWLAnnotationSubject, OWLAnnotationAssertionAxiom>> mapPointerOptional =
-                get(OWLAnnotationSubject.class, OWLAnnotationAssertionAxiom.class);
-            if (mapPointerOptional.isPresent()) {
-                return mapPointerOptional.get().getValuesAsCollection((OWLAnnotationSubject) key);
-            }
+            return annotationAssertionAxiomsBySubject
+                .getValuesAsCollection((OWLAnnotationSubject) key);
         }
         return getAxiomsByType().filterAxioms(filter, key);
     }
@@ -1265,8 +1301,8 @@ protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarations
         @Override
         public void visit(OWLDisjointClassesAxiom axiom) {
             AtomicBoolean allAnon = new AtomicBoolean(true);
-            axiom.classExpressions().filter(c -> !c.isAnonymous()).map(c -> c.asOWLClass())
-                .forEach(c -> {
+            axiom.classExpressions().filter(c -> !c.isAnonymous())
+                .map(OWLClassExpression::asOWLClass).forEach(c -> {
                     disjointClassesAxiomsByClass.remove(c, axiom);
                     classAxiomsByClass.remove(c, axiom);
                     allAnon.set(false);
@@ -1398,8 +1434,8 @@ protected transient MapPointer<OWLEntity, OWLDeclarationAxiom>      declarations
         @Override
         public void visit(OWLEquivalentClassesAxiom axiom) {
             AtomicBoolean allAnon = new AtomicBoolean(true);
-            axiom.classExpressions().filter(c -> !c.isAnonymous()).map(c -> c.asOWLClass())
-                .forEach(c -> {
+            axiom.classExpressions().filter(c -> !c.isAnonymous())
+                .map(OWLClassExpression::asOWLClass).forEach(c -> {
                     equivalentClassesAxiomsByClass.remove(c, axiom);
                     classAxiomsByClass.remove(c, axiom);
                     allAnon.set(false);
