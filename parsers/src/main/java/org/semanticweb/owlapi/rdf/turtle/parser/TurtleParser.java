@@ -12,7 +12,7 @@ import org.semanticweb.owlapi.rdf.rdfxml.parser.OWLRDFConsumer;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.NodeID;
 import org.semanticweb.owlapi.model.PrefixManager;
-import org.semanticweb.owlapi.util.PrefixManagerImpl;
+import org.semanticweb.owlapi.utilities.PrefixManagerImpl;
 import org.semanticweb.owlapi.util.EscapeUtils;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 import org.semanticweb.owlapi.vocab.XSDVocabulary;
@@ -27,7 +27,7 @@ public class TurtleParser implements TurtleParserConstants {
 
     /** Instantiates a new turtle parser.
      * 
-     * @param reader
+     * @param r
      *            the reader
      * @param handler
      *            the handler

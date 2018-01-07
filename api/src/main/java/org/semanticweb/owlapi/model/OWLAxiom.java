@@ -12,7 +12,7 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. */
 package org.semanticweb.owlapi.model;
 
-import static org.semanticweb.owlapi.util.OWLAPIStreamUtils.equalStreams;
+import static org.semanticweb.owlapi.utilities.OWLAPIStreamUtils.equalStreams;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +35,7 @@ public interface OWLAxiom extends OWLObject, HasAnnotations {
      * Gets an axiom that is structurally equivalent to the input axiom without annotations. This
      * essentially returns a version of the axiom stripped of any annotations.
      *
+     * @param <T> input type
      * @param axiom axiom to divest of annotations
      * @return The annotationless version of the axiom
      */
@@ -96,6 +97,7 @@ public interface OWLAxiom extends OWLObject, HasAnnotations {
      * Gets an axiom that is structurally equivalent to this axiom without annotations. This
      * essentially returns a version of this axiom stripped of any annotations.
      *
+     * @param <T> type of axiom returned
      * @return The annotationless version of this axiom
      */
     <T extends OWLAxiom> T getAxiomWithoutAnnotations();
@@ -108,6 +110,7 @@ public interface OWLAxiom extends OWLObject, HasAnnotations {
      * {@code axiom.getAxiomWithoutAnnotations()}, but it provides compile time type safety - there
      * will be no attempt to cast to an incompatible type.
      *
+     * @param <T> type of axiom returned
      * @param witness Variable to ground the generic return type
      * @return The annotationless version of this axiom
      */
@@ -126,6 +129,7 @@ public interface OWLAxiom extends OWLObject, HasAnnotations {
      * {@code axiom.getAnnotatedAxiom(annotations)}, but it provides compile time type safety -
      * there will be no attempt to cast to an incompatible type.
      *
+     * @param <T> type of axiom returned
      * @param witness Variable to ground the generic return type
      * @param annotations The annotations that will be added to existing annotations to annotate the
      *        copy of this axiom
@@ -143,6 +147,7 @@ public interface OWLAxiom extends OWLObject, HasAnnotations {
      * any annotations on it they will be merged with the specified set of annotations. Note that
      * this axiom will not be modified (or removed from any ontologies).
      *
+     * @param <T> type of axiom returned
      * @param annotations The annotations that will be added to existing annotations to annotate the
      *        copy of this axiom
      * @return A copy of this axiom that has the specified annotations plus any existing annotations
@@ -155,6 +160,7 @@ public interface OWLAxiom extends OWLObject, HasAnnotations {
      * any annotations on it they will be merged with the specified set of annotations. Note that
      * this axiom will not be modified (or removed from any ontologies).
      *
+     * @param <T> type of axiom returned
      * @param annotations The annotations that will be added to existing annotations to annotate the
      *        copy of this axiom
      * @return A copy of this axiom that has the specified annotations plus any existing annotations

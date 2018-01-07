@@ -51,7 +51,7 @@ public class MemoryBenchmark {
     /**
      * Run memory profiling for an input ontology and output the dump file to the hprof path
      * provided
-     *
+     * 
      * @param ontologyPath input ontology
      * @param hprofPath dump file path for output
      * @throws OWLOntologyCreationException if the ontology cannot be created or loaded

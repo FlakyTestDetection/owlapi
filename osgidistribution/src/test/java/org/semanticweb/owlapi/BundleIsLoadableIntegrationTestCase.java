@@ -20,6 +20,7 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import org.apache.felix.framework.FrameworkFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.osgi.framework.Bundle;
@@ -28,11 +29,16 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.test.IntegrationTest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("javadoc")
 @Category(IntegrationTest.class)
 public class BundleIsLoadableIntegrationTestCase {
+    private static Logger logger =
+        LoggerFactory.getLogger(BundleIsLoadableIntegrationTestCase.class);
 
+    @Ignore
     @Test
     public void startBundle() throws BundleException, ClassNotFoundException,
         IllegalAccessException, InstantiationException {
@@ -64,9 +70,9 @@ public class BundleIsLoadableIntegrationTestCase {
         BundleContext context = framework.getBundleContext();
         assertNotNull("context is null", context);
         List<String> bundles = Arrays.asList("org.apache.servicemix.bundles.javax-inject",
-            "org.apache.servicemix.bundles.aopalliance", "slf4j-simple", "slf4j-api",
-            "caffeine", "guava", "jsr305", "guice-multibindings", "guice-4",
-            "commons-io", "commons-codec", "jcl-over-slf4j");
+            "org.apache.servicemix.bundles.aopalliance", "slf4j-simple", "slf4j-api", "caffeine",
+            "guava", "jsr305", "guice-multibindings", "guice-4", "commons-io", "commons-codec",
+            "jcl-over-slf4j");
         for (String bundleName : bundles) {
             try {
                 String simple = getJarURL(bundleName);
